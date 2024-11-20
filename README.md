@@ -93,7 +93,7 @@ Now, all the commands will be logged in the file `/var/log/sudo.log`
 ```bash
     while read -r file; do
         sudo setfacl -m o::0 "$file"
-    done < dir.txt
+    done < restricted_directories.txt
 ```
 
 <a name="validate"/>
