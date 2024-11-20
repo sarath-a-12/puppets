@@ -1,0 +1,9 @@
+/boot
+/etc
+/lib
+/lib64
+/usr/lib
+/usr/lib64
+/opt
+/srv
+/var/log
