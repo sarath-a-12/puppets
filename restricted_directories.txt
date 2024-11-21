@@ -1,0 +1,5 @@
+/boot
+/etc
+/opt
+/srv
+/var/log
