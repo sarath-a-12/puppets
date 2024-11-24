@@ -9,6 +9,8 @@
 5. [Restrict sudo privileges](#restrict)
 6. [Use setfacl to restrict access to portions of the file system](#setfacl)
 7. [Validate UID of non-root users](#validate)
+8. [Restrict Core Dump](#coredump)
+9. [Notify SystemAdmin via mail whenever `sudo` is used by someone](#mail)
 
 ## Detailed Instructions
 
@@ -133,3 +135,89 @@ sudo systemctl enable auditd
       # modify the mail
   fi
   ```
+
+<a name="coredump">
+
+### Restrict Core Dump
+
+- To disable core dump for all users, open `/etc/security/limits.conf` and add this line: 
+    
+    ```bash
+    *               hard    core            0
+    ```
+
+<a name="mail">
+
+### Notify SystemAdmin via mail whenever `sudo` is used by someone
+
+#### Setup `msmtp` to send emails from terminal
+
+- Paste this to `~/.msmtprc` 
+    ```bash
+    account default
+    host smtp.gmail.com
+    port 587
+    auth on
+    user <email-from-alert-is-sending>
+    password <password>
+    from <email-from-alert-is-sending>
+    tls on
+    ```
+    >NOTE: If you are using Gmail's SMTP server, you need to set up an App Password in your gmail settings, get the key, and add it in place of the password. 
+
+#### Setup systemd service to notify system admin whenever someone uses sudo
+
+> NOTE: You need to setup sudo logging as a prerequisite
+
+
+- Open `/usr/local/bin/sudo_watcher.sh` and add the following: 
+    ```bash
+    #!/bin/bash
+
+    ADMIN_EMAIL = "admin@example.com"
+
+
+    inotifywait -m -e modify var/log/sudo.log | 
+    while read path action; do
+        MESSAGE = $(tail -n 2 /var/log/sudo.log)
+        echo -e "Subject: Sudo Alert\n\n$MESSAGE" | msmtp "$ADMIN_EMAIL"
+    ```
+    > NOTE: please change `admin@exmaple.com` to the mail you want to notify sudo logging
+
+- Run this command: 
+    ```bash
+    chmod +x /usr/local/bin/sudo_watcher.sh
+    ```
+
+- Create a systemd service: Open `/var/systemd/system/mail_sudo.service` and add the following:
+    ```
+    [Unit]
+    Description=Watch for changes to sudo log file
+
+    [Service]
+    ExecStart=/bin/bash /usr/local/bin/sudo_watcher.sh
+    StartLimitIntervalSec=30
+    StartLimitBurst=5
+
+    [Install]
+    WantedBy=multi-user.target
+    ```
+
+- Setup and start the service: Run the following commands
+    ```bash
+    systemctl daemon-reload
+    systemctl start mail_sudo.service
+    systemctl enable mail_sudo.service
+    ```
+
+- Check whether the service is running: 
+    ```bash
+    systemctl status mail_sudo.service
+    ```
+- Now, try doing sudo commands like `sudo ls` and check whether admin-mail is notified
+
+- To stop the service: 
+    ```bash
+    systemctl daemon-reload
+    systemctl stop mail_sudo.service
+    ```
