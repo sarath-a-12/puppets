@@ -10,9 +10,10 @@ echo "-w /etc/passwd -p wa -k detect_uid0" | sudo tee -a /etc/audit/rules.d/audi
 cat <<EOT > /usr/local/bin/check_uid0.sh
 #!/bin/bash
 if awk -F: '\$3 == 0 {print \$1}' /etc/passwd | grep -v "^root$"; then
-    echo "Warning: Non-root user with UID 0 detected!"
+    ADMIN_EMAIL="admin@example.com"
+    MESSAGE="Warning: Non-root user with UID 0 detected!"
     # Uncomment the line below to send an email alert
-    # | mail -s "UID 0 Alert" admin@example.com
+    echo -e "Subject: UID 0 Alert\n\n$MESSAGE" | msmtp "$ADMIN_EMAIL"
 fi
 EOT
 chmod +x /usr/local/bin/check_uid0.sh

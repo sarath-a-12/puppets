@@ -23,16 +23,18 @@ bash configure_sudo_log.sh >> "$LOG_FILE" 2>&1 || echo "Failed to configure sudo
 echo "Running task: Restrict file system access..." >> "$LOG_FILE"
 bash restrict_filesystem.sh >> "$LOG_FILE" 2>&1 || echo "Failed to restrict file system access" >> "$LOG_FILE"
 
-# Task 5: Validate UID of non-root users
+# Task 5: Notify admin via email for sudo usage
+echo "Running task: Configure sudo email notifications..." >> "$LOG_FILE"
+bash configure_sudo_notify.sh >> "$LOG_FILE" 2>&1 || echo "Failed to configure sudo email notifications" >> "$LOG_FILE"
+
+# Task 6: Validate UID of non-root users
 echo "Running task: Validate UID of non-root users..." >> "$LOG_FILE"
 bash validate_uid.sh >> "$LOG_FILE" 2>&1 || echo "Failed to validate UID" >> "$LOG_FILE"
 
-# Task 6: Restrict core dumps
+# Task 7: Restrict core dumps
 echo "Running task: Restrict core dumps..." >> "$LOG_FILE"
 bash restrict_core_dumps.sh >> "$LOG_FILE" 2>&1 || echo "Failed to restrict core dumps" >> "$LOG_FILE"
 
-# Task 7: Notify admin via email for sudo usage
-echo "Running task: Configure sudo email notifications..." >> "$LOG_FILE"
-bash configure_sudo_notify.sh >> "$LOG_FILE" 2>&1 || echo "Failed to configure sudo email notifications" >> "$LOG_FILE"
+
 
 echo "Hardening tasks completed." >> "$LOG_FILE"
