@@ -1,6 +1,9 @@
 #!/bin/bash
 # Configure email notifications for sudo usage
 
+# Install inotify-tools for file watching
+sudo dnf install inotify-tools -y
+
 # Install msmtp for email sending
 sudo dnf install msmtp -y
 
