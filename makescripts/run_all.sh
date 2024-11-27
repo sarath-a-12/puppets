@@ -15,6 +15,9 @@ bash update_packages.sh >> "$LOG_FILE" 2>&1 || echo "Failed to update packages" 
 echo "Running task: Remove write permissions of world-writable files..." >> "$LOG_FILE"
 bash remove_world_write.sh >> "$LOG_FILE" 2>&1 || echo "Failed to remove world-writable permissions" >> "$LOG_FILE"
 
+echo "Running task: Password Modifications..." >> "$LOG_FILE"
+bash passwd.sh >> "$LOG_FILE" 2>&1 || echo "Failed" >> "$LOG_FILE"
+
 # Task 3: Log sudo usage
 echo "Running task: Configure sudo logging..." >> "$LOG_FILE"
 bash configure_sudo_log.sh >> "$LOG_FILE" 2>&1 || echo "Failed to configure sudo logging" >> "$LOG_FILE"
