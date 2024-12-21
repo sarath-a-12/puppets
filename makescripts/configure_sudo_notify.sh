@@ -7,15 +7,20 @@ sudo dnf install inotify-tools -y
 # Install msmtp for email sending
 sudo dnf install msmtp -y
 
+# Prompt for admin email and password
+read -p "Enter the admin email: " ADMIN_EMAIL
+read -s -p "Enter the password for $ADMIN_EMAIL: " ADMIN_PASSWORD
+echo
+
 # Configure msmtp
 cat <<EOT > ~/.msmtprc
 account default
 host smtp.gmail.com
 port 587
 auth on
-user <email>
-password <password>
-from <email>
+user $ADMIN_EMAIL
+password $ADMIN_PASSWORD
+from $ADMIN_EMAIL
 tls on
 EOT
 chmod 600 ~/.msmtprc
@@ -23,7 +28,7 @@ chmod 600 ~/.msmtprc
 # Create sudo watcher script
 cat <<EOT > /usr/local/bin/sudo_watcher.sh
 #!/bin/bash
-ADMIN_EMAIL="admin@example.com"
+ADMIN_EMAIL="$ADMIN_EMAIL"
 
 inotifywait -m -e modify /var/log/sudo.log |
 while read path action; do

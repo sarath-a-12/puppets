@@ -1,19 +1,35 @@
 #!/bin/bash
-# Install auditd and add rules to validate UID
-sudo dnf install auditd -y
-sudo systemctl start auditd
-sudo systemctl enable auditd
-sudo auditctl -w /etc/passwd -p wa -k detect_uid0
-echo "-w /etc/passwd -p wa -k detect_uid0" | sudo tee -a /etc/audit/rules.d/audit.rules
+# Configure email notifications for checking if the UID is 0
+read -p "Enter the admin email: " ADMIN_EMAIL
 
-# Add UID check script to /usr/local/bin
+# Create uid-checker script
 cat <<EOT > /usr/local/bin/check_uid0.sh
 #!/bin/bash
-if awk -F: '\$3 == 0 {print \$1}' /etc/passwd | grep -v "^root$"; then
-    ADMIN_EMAIL="admin@example.com"
-    MESSAGE="Warning: Non-root user with UID 0 detected!"
-    # Uncomment the line below to send an email alert
-    echo -e "Subject: UID 0 Alert\n\n$MESSAGE" | msmtp "$ADMIN_EMAIL"
-fi
+ADMIN_EMAIL="$ADMIN_EMAIL"
+
+inotifywait -m -e modify /etc/passwd |
+while read path action; do
+    if awk -F: '\$3 == 0 {print \$1}' /etc/passwd | grep -v "^root$"; then
+        MESSAGE="Warning: Non-root user with UID 0 detected!"
+        echo -e "Subject: UID 0 Alert\n\n\$MESSAGE" | msmtp "\$ADMIN_EMAIL"
+    fi  
+done
 EOT
 chmod +x /usr/local/bin/check_uid0.sh
+
+# Create and enable systemd service
+cat <<EOT | sudo tee /etc/systemd/system/validate_uid.service
+[Unit]
+Description=Watch for any 0 UID user added.
+
+[Service]
+ExecStart=/bin/bash /usr/local/bin/check_uid0.sh
+StartLimitIntervalSec=30
+StartLimitBurst=5
+
+[Install]
+WantedBy=multi-user.target
+EOT
+sudo systemctl daemon-reload
+sudo systemctl start validate_uid.service
+sudo systemctl enable validate_uid.service
