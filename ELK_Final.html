@@ -1,0 +1,412 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<!-- 2024-07-16 Tue 11:29 -->
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>ELK Stack setup guide</title>
+<meta name="generator" content="Org mode" />
+<link rel="stylesheet" type="text/css" href="https://fniessen.github.io/org-html-themes/src/readtheorg_theme/css/htmlize.css"/>
+<link rel="stylesheet" type="text/css" href="https://fniessen.github.io/org-html-themes/src/readtheorg_theme/css/readtheorg.css"/>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+<script type="text/javascript" src="https://fniessen.github.io/org-html-themes/src/lib/js/jquery.stickytableheaders.min.js"></script>
+<script type="text/javascript" src="https://fniessen.github.io/org-html-themes/src/readtheorg_theme/js/readtheorg.js"></script>
+<script type="text/javascript">
+/*
+@licstart  The following is the entire license notice for the
+JavaScript code in this tag.
+
+Copyright (C) 2012-2020 Free Software Foundation, Inc.
+
+The JavaScript code in this tag is free software: you can
+redistribute it and/or modify it under the terms of the GNU
+General Public License (GNU GPL) as published by the Free Software
+Foundation, either version 3 of the License, or (at your option)
+any later version.  The code is distributed WITHOUT ANY WARRANTY;
+without even the implied warranty of MERCHANTABILITY or FITNESS
+FOR A PARTICULAR PURPOSE.  See the GNU GPL for more details.
+
+As additional permission under GNU GPL version 3 section 7, you
+may distribute non-source (e.g., minimized or compacted) forms of
+that code without the copy of the GNU GPL normally required by
+section 4, provided you include this license notice and a URL
+through which recipients can access the Corresponding Source.
+
+
+@licend  The above is the entire license notice
+for the JavaScript code in this tag.
+*/
+<!--/*--><![CDATA[/*><!--*/
+ function CodeHighlightOn(elem, id)
+ {
+   var target = document.getElementById(id);
+   if(null != target) {
+     elem.cacheClassElem = elem.className;
+     elem.cacheClassTarget = target.className;
+     target.className = "code-highlighted";
+     elem.className   = "code-highlighted";
+   }
+ }
+ function CodeHighlightOff(elem, id)
+ {
+   var target = document.getElementById(id);
+   if(elem.cacheClassElem)
+     elem.className = elem.cacheClassElem;
+   if(elem.cacheClassTarget)
+     target.className = elem.cacheClassTarget;
+ }
+/*]]>*///-->
+</script>
+</head>
+<body>
+<div id="content">
+<h1 class="title">ELK Stack setup guide</h1>
+<div id="table-of-contents">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents">
+<ul>
+<li><a href="#orgf178a68">1. ELK Stack setup in Virtual Machine with oracle linux 8</a>
+<ul>
+<li><a href="#orgffdda8c">1.1. Prerequisites</a></li>
+<li><a href="#orgcd6214f">1.2. Install and setup ElasticSearch</a></li>
+<li><a href="#orgc4d9e33">1.3. Install and setup Kibana</a></li>
+<li><a href="#org19782d5">1.4. Connect Kibana and Elasticsearch and access the server with a superuser</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-orgf178a68" class="outline-2">
+<h2 id="orgf178a68"><span class="section-number-2">1</span> ELK Stack setup in Virtual Machine with oracle linux 8</h2>
+<div class="outline-text-2" id="text-1">
+</div>
+<div id="outline-container-orgffdda8c" class="outline-3">
+<h3 id="orgffdda8c"><span class="section-number-3">1.1</span> Prerequisites</h3>
+<div class="outline-text-3" id="text-1-1">
+<ul class="org-ul">
+<li>Minimum 8GB of RAM</li>
+<li>2 CPU core</li>
+<li>20 GB of disk space</li>
+<li>Check jvm.options file</li>
+</ul>
+</div>
+</div>
+
+<div id="outline-container-orgcd6214f" class="outline-3">
+<h3 id="orgcd6214f"><span class="section-number-3">1.2</span> Install and setup ElasticSearch</h3>
+<div class="outline-text-3" id="text-1-2">
+<ul class="org-ul">
+<li>Navigate to root, channge hostname</li>
+</ul>
+<div class="org-src-container">
+<pre class="src src-bash">sudo su -
+hostnamectl set-hostname &lt;new_hostname&gt;
+</pre>
+</div>
+<p>
+<i>changing hostname is optional, but it is recommended to understand the change</i>
+</p>
+
+<ul class="org-ul">
+<li>Install Java</li>
+</ul>
+<div class="org-src-container">
+<pre class="src src-bash">dnf update
+dnf install java-11-openjdk-devel
+exec bash
+</pre>
+</div>
+
+<ul class="org-ul">
+<li>Check java version</li>
+</ul>
+<div class="org-src-container">
+<pre class="src src-bash">java -version
+</pre>
+</div>
+
+<ul class="org-ul">
+<li>Import GPG key for elasticsearch</li>
+</ul>
+<div class="org-src-container">
+<pre class="src src-bash">rpm --import https://artifacts.elastic.co/GPG-KEY-elasticsearch
+</pre>
+</div>
+
+<ul class="org-ul">
+<li>Modify elasticsearch.repo</li>
+</ul>
+<div class="org-src-container">
+<pre class="src src-bash">cd /etc/yum.repos.d
+nano elasticsearch.repo
+</pre>
+</div>
+
+<ul class="org-ul">
+<li>Add the following lines to the elasticsearch.repo file</li>
+</ul>
+<div class="org-src-container">
+<pre class="src src-bash">[elasticsearch]
+name=Elasticsearch repository for 8.x packages
+baseurl=https://artifacts.elastic.co/packages/8.x/yum
+gpgcheck=1
+gpgkey=https://artifacts.elastic.co/GPG-KEY-elasticsearch
+enabled=0
+autorefresh=1
+type=rpm-md
+
+</pre>
+</div>
+
+<ul class="org-ul">
+<li>Install ElasticSearch</li>
+</ul>
+<div class="org-src-container">
+<pre class="src src-bash">sudo yum install --enablerepo=elasticsearch elasticsearch
+</pre>
+</div>
+
+<ul class="org-ul">
+<li>Open port 9200</li>
+</ul>
+<div class="org-src-container">
+<pre class="src src-bash">firewall-cmd --zone=public --add-port=9200/tcp --permanent
+firewall-cmd --reload
+</pre>
+</div>
+<ul class="org-ul">
+<li>Confirm port status</li>
+</ul>
+<div class="org-src-container">
+<pre class="src src-bash">netstat -ntlp | grep 9200
+firewall-cmd --list-all
+</pre>
+</div>
+
+<ul class="org-ul">
+<li>Modify elasticsearch.yml file</li>
+</ul>
+<div class="org-src-container">
+<pre class="src src-bash">cd /etc/elasticsearch
+nano elasticsearch.yml
+</pre>
+</div>
+
+<ul class="org-ul">
+<li>Make the following changes to the yml file</li>
+</ul>
+<div class="org-src-container">
+<pre class="src src-bash">Uncomment the following lines
+    network.host: 192.168.122.1
+    http.port: 9200
+
+Set the following values
+    xpack.security.enabled: true
+    xpack.security.enrollment.enabled: true
+
+
+</pre>
+</div>
+<p>
+-Modify jvm.options file
+</p>
+<div class="org-src-container">
+<pre class="src src-bash">cd /etc/elasticsearch
+nano jvm.options
+</pre>
+</div>
+
+<ul class="org-ul">
+<li>Add the following lines to the jvm.options file</li>
+</ul>
+<div class="org-src-container">
+<pre class="src src-bash">-Xms512m
+-Xmx512m
+
+
+</pre>
+</div>
+
+<ul class="org-ul">
+<li>Start Elasticsearch service</li>
+</ul>
+<div class="org-src-container">
+<pre class="src src-bash">systemctl daemon-reload
+systemctl start elasticsearch.service
+</pre>
+</div>
+<p>
+<b>Note: Each time a configuration file is changed, it is required to restart the service</b>
+</p>
+
+<ul class="org-ul">
+<li>View Errors/Logs</li>
+</ul>
+<div class="org-src-container">
+<pre class="src src-bash">journalctl -xe
+</pre>
+</div>
+<p>
+or
+</p>
+<div class="org-src-container">
+<pre class="src src-bash">cd /var/log/elasticsearch
+</pre>
+</div>
+<ul class="org-ul">
+<li>Log files will be present in the above path</li>
+</ul>
+</div>
+</div>
+
+<div id="outline-container-orgc4d9e33" class="outline-3">
+<h3 id="orgc4d9e33"><span class="section-number-3">1.3</span> Install and setup Kibana</h3>
+<div class="outline-text-3" id="text-1-3">
+<ul class="org-ul">
+<li>Modify the kibana.repo file</li>
+</ul>
+<div class="org-src-container">
+<pre class="src src-bash">cd /etc/yum.repos.d/
+nano kibana.repo
+</pre>
+</div>
+
+<ul class="org-ul">
+<li>Add the following to the .repo file</li>
+</ul>
+<div class="org-src-container">
+<pre class="src src-bash">[kibana-8.x]
+name=Kibana repository for 8.x packages
+baseurl=https://artifacts.elastic.co/packages/8.x/yum
+gpgcheck=1
+gpgkey=https://artifacts.elastic.co/GPG-KEY-elasticsearch
+enabled=1
+autorefresh=1
+type=rpm-md
+
+</pre>
+</div>
+
+<ul class="org-ul">
+<li>Install Kibana</li>
+</ul>
+<div class="org-src-container">
+<pre class="src src-bash">sudo yum install kibana
+</pre>
+</div>
+
+<ul class="org-ul">
+<li>Edit the kibana.yml file</li>
+</ul>
+<div class="org-src-container">
+<pre class="src src-bash">nano /etc/kibana/kibana.yml
+</pre>
+</div>
+
+<ul class="org-ul">
+<li>Modify the yml file</li>
+</ul>
+<div class="org-src-container">
+<pre class="src src-bash">Uncomment the following lines
+    server.port: 5601
+    server.host: "localhost"
+
+</pre>
+</div>
+
+<ul class="org-ul">
+<li>Enable and start the kibana.service</li>
+</ul>
+<div class="org-src-container">
+<pre class="src src-bash">systemctl enable kibana
+systemctl start kibana
+</pre>
+</div>
+
+<ul class="org-ul">
+<li>View Errors/Logs</li>
+</ul>
+<div class="org-src-container">
+<pre class="src src-bash">journalctl -xe
+</pre>
+</div>
+<p>
+or
+</p>
+<div class="org-src-container">
+<pre class="src src-bash">cd /var/log/kibana
+</pre>
+</div>
+<ul class="org-ul">
+<li>Log files will be present in the above path</li>
+</ul>
+</div>
+</div>
+
+
+<div id="outline-container-org19782d5" class="outline-3">
+<h3 id="org19782d5"><span class="section-number-3">1.4</span> Connect Kibana and Elasticsearch and access the server with a superuser</h3>
+<div class="outline-text-3" id="text-1-4">
+<ul class="org-ul">
+<li>Create a user</li>
+</ul>
+<div class="org-src-container">
+<pre class="src src-bash">cd usr/share/elasticsearch
+bin/elasticsearch-users useradd &lt;user-name&gt; -p &lt;password&gt; -r &lt;role(superuser)&gt;
+</pre>
+</div>
+
+<ul class="org-ul">
+<li>Check the existence of users</li>
+</ul>
+<div class="org-src-container">
+<pre class="src src-bash">cd usr/share/elasticsearch
+bin/elasticsearch-users list
+</pre>
+</div>
+
+<ul class="org-ul">
+<li>Stop and start elastic and kibana service</li>
+</ul>
+<div class="org-src-container">
+<pre class="src src-bash">systemctl stop elasticsearch.service kibana
+systemctl start elasticsearch.service kibana
+</pre>
+</div>
+
+<ul class="org-ul">
+<li>Open Kibana UI with localhost:5601 in web</li>
+<li>Enter the credentials to get a prompt for entering the enrollment token</li>
+<li>Generate an enrollment token and copy it to the UI</li>
+</ul>
+<div class="org-src-container">
+<pre class="src src-bash">cd usr/share/elasticsearch
+bin/elasticsearch-create-enrollment-token -s kibana
+</pre>
+</div>
+
+<ul class="org-ul">
+<li>A new page with a verification code will appear. Run the following cmd to get the verification code</li>
+</ul>
+<div class="org-src-container">
+<pre class="src src-bash">cd usr/share/kibana
+bin/kibana-verification-code
+</pre>
+</div>
+
+<ul class="org-ul">
+<li>Kibana is now ready to use, add integrations to setup metrics and graphs</li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+<div id="postamble" class="status">
+<p class="date">Created: 2024-07-16 Tue 11:29</p>
+<p class="validation"><a href="http://validator.w3.org/check?uri=referer">Validate</a></p>
+</div>
+</body>
+</html>
